@@ -84,14 +84,24 @@ def view_and_update():
                 segment_end_time = int(row['Fixed'])
                 assert int(row['Length']) > 0, "There is a Fixed row in " + file_path + " with a non-positive value for Fixed"
                 assert int(row['Length']) < total_length_for_day, "There is a Fixed row in " + file_path + " with a value for Fixed that is greater than the total length for the day."
-                updated_rows.append(populate_actual_length_for_segment(rows[segment_start_index:index], segment_start_time, segment_end_time))
+                updated_rows.extend(populate_actual_length_for_segment(rows[segment_start_index:index], segment_start_time, segment_end_time))
                 segment_start_time = segment_end_time
                 segment_start_index = index
 
-        updated_rows.append(populate_actual_length_for_segment(rows[segment_start_index:], segment_start_time, total_length_for_day))
+        updated_rows.extend(populate_actual_length_for_segment(rows[segment_start_index:], segment_start_time, total_length_for_day))
 
 
-    print(updated_rows) # Prints the new updated table
+
+    # Prints the new updated table
+    pretty_fmt = "{:<8} {:<8} {:<8} {:<8} {:<8}"
+    print (pretty_fmt.format("Fixed", "Rigid", "Activity", "Length", "ActLen"))
+    for row in updated_rows:
+        fixed = row["Fixed"]
+        rigid = row["Rigid"]
+        activity = row["Activity"]
+        length = row["Length"]
+        act_len = row["ActLen"]
+        print(pretty_fmt.format(fixed, rigid, activity, length, act_len))
 
 def repeater():
     repeat = input("What do you want to do now?\n1. Add tasks\n2. Open the table menu\n3. Close the application\n")
