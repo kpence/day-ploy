@@ -59,18 +59,18 @@ def view_and_update():
 
         def populate_actual_length_for_segment(segment_rows, segment_stat_time, segment_end_time):
             segment_points_total = sum([int(row['Length']) for row in segment_rows])
-            segment_ratio_multiplier = float(segment_end_time - segment_start_time) / segment_points_total
+            segment_ratio_multiplier = float(segment_end_time - segment_start_time) / float(segment_points_total)
 
-            segment_points_remaining = segment_points_total
+            segment_time_remaining = segment_end_time - segment_start_time
 
             for row in segment_rows[:-1]:
-                row['ActLen'] = row['Length'] if row['Rigid'] else int(row['Length'] * segment_ratio_multiplier)
-                segment_points_remaining -= row['ActLen']
+                row['ActLen'] = int(row['Length']) if row['Rigid'] != '' else int(float(row['Length']) * segment_ratio_multiplier)
+                segment_time_remaining -= int(row['ActLen'])
                 
                 # TODO Handle the bugs here
-                assert segment_points_remaining <= 0, "This plan can't work. Ki hasn't decided how to handle this yet, please bug him.";
+                assert segment_time_remaining > 0, "This plan can't work because thefloat. Ki hasn't decided how to handle this yet, please bug him.";
 
-            segment_rows[-1]['ActLen'] = segment_points_remaining
+            segment_rows[-1]['ActLen'] = segment_time_remaining
 
             return segment_rows
 
