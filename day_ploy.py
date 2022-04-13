@@ -31,31 +31,67 @@ def adding():
             # TODO might need to make the name of the CSV file change according to the date. But this can be done later: "data.csv" should do for now.
 			with open(os.path.join(sys.path[0], 'data.csv'), mode='a', newline='') as csv_file:
 				fieldnames = [ # TODO another fieldname which is needed is the start time of each activity (make sure you add it in writer.writerow!)
-				'Activity',
-				'length',
-				'ActLen',
+                    'Fixed',
+                    'Rigid',
+                    'Activity',
+                    'Length',
+                    'ActLen',
 				]
                 
 				writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
 
 				writer.writerow({
-				'Activity': activity_name,
-				'length': length,
-                		'ActLen': 0
+                    'Activity': activity_name,
+                    'Length': length,
+                    'ActLen': 0
 				})
                 
 def view_and_update():
-    MyDataFrame = pandas.read_csv(os.path.join(sys.path[0],'data.csv'))
+    total_length_for_day = daily_mins # TODO get this from the user
 
-    length_column_total = MyDataFrame['length'].sum() # This will add up all of the values in the length column
-    ratio_multiplier = int(daily_mins/length_column_total) # This calculates the value of the multiplier which we will use in order to calculate the actual length
-    
-    for i in MyDataFrame.index: # Iterates over the dataset
-        ActLen_cell_new = ratio_multiplier * MyDataFrame.at[i,'length'] # Calculates the actual length using the user input and the multiplier
-        MyDataFrame.at[i,'ActLen'] = ActLen_cell_new # Selects the corresponding ActLen cell, and refreshes it with the new value (ActLen_cell_new)
-                                                     # TODO this value does not get added to the data.csv file, I need to make the program add it.
-        
-    print(MyDataFrame) # Prints the new updated table
+    file_path = os.path.join(sys.path[0],'data.csv')
+    with open(file_path, newline='') as csvfile:
+        rows = [{key: val.strip() for key, val in row.items()} for row in csv.DictReader(csvfile)]
+
+        # TODO validate the csv file has everything needed
+
+        updated_rows = []
+
+        def populate_actual_length_for_segment(segment_rows, segment_stat_time, segment_end_time):
+            segment_points_total = sum([int(row['Length']) for row in segment_rows])
+            segment_ratio_multiplier = float(segment_end_time - segment_start_time) / segment_points_total
+
+            segment_points_remaining = segment_points_total
+
+            for row in segment_rows[:-1]:
+                row['ActLen'] = row['Length'] if row['Rigid'] else int(row['Length'] * segment_ratio_multiplier)
+                segment_points_remaining -= row['ActLen']
+                
+                # TODO Handle the bugs here
+                assert segment_points_remaining <= 0, "This plan can't work. Ki hasn't decided how to handle this yet, please bug him.";
+
+            segment_rows[-1]['ActLen'] = segment_points_remaining
+
+            return segment_rows
+
+        segment_start_index = 0
+        segment_start_time = 0
+
+        for index, row in enumerate(rows):
+            assert row['Length'] != '', "There is a row in " + file_path + " that is missing a length value."
+            assert int(row['Length']) > 0, "There is a row in " + file_path + " with a non-positive length value."
+            if row['Fixed'] != '':
+                segment_end_time = int(row['Fixed'])
+                assert int(row['Length']) > 0, "There is a Fixed row in " + file_path + " with a non-positive value for Fixed"
+                assert int(row['Length']) < total_length_for_day, "There is a Fixed row in " + file_path + " with a value for Fixed that is greater than the total length for the day."
+                updated_rows.append(populate_actual_length_for_segment(rows[segment_start_index:index], segment_start_time, segment_end_time))
+                segment_start_time = segment_end_time
+                segment_start_index = index
+
+        updated_rows.append(populate_actual_length_for_segment(rows[segment_start_index:], segment_start_time, total_length_for_day))
+
+
+    print(updated_rows) # Prints the new updated table
 
 def repeater():
     repeat = input("What do you want to do now?\n1. Add tasks\n2. Open the table menu\n3. Close the application\n")
