@@ -57,7 +57,7 @@ def view_and_update():
 
         updated_rows = []
 
-        def populate_actual_length_for_segment(segment_rows, segment_stat_time, segment_end_time):
+        def populate_actual_length_for_segment(segment_rows, segment_start_time, segment_end_time):
             segment_points_total = sum([int(row['Length']) for row in segment_rows])
             segment_ratio_multiplier = float(segment_end_time - segment_start_time) / float(segment_points_total)
 
@@ -89,8 +89,6 @@ def view_and_update():
                 segment_start_index = index
 
         updated_rows.extend(populate_actual_length_for_segment(rows[segment_start_index:], segment_start_time, total_length_for_day))
-
-
 
     # Prints the new updated table
     pretty_fmt = "{:<8} {:<8} {:<8} {:<8} {:<8}"

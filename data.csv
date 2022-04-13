@@ -1,6 +1,7 @@
 Fixed,Rigid,Activity,Length,ActLen
 ,,Test,15,0
-,,Foobar,30,0
+,R,Foobar,30,0
 ,,Bar,60,0
-,,Baz,20,0
+330,,Baz,20,0
 ,,Gym,100,0
+,,Walk,20,0
